@@ -1,7 +1,14 @@
 name: Thumbnails
 
 on:
-  - deployment
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment"
+        type: choice
+        options:
+          - staging
+          - production
 
 env:
   AWS_REGION: us-west-1
@@ -13,7 +20,7 @@ jobs:
     defaults:
       run:
         working-directory: thumbnails
-    environment: ${{ github.event.deployment.environment }} 
+    environment: ${{ github.event.inputs.environment }} 
 
     steps:
     - name: Checkout repository
@@ -38,13 +45,13 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets[format('AWS_{0}_ACCESS_KEY_ID', github.event.deployment.environment)] }}
-        aws-secret-access-key: ${{ secrets[format('AWS_{0}_SECRET_ACCESS_KEY', github.event.deployment.environment)] }}
+        aws-access-key-id: ${{ secrets[format('AWS_{0}_ACCESS_KEY_ID', github.event.inputs.environment)] }}
+        aws-secret-access-key: ${{ secrets[format('AWS_{0}_SECRET_ACCESS_KEY', github.event.inputs.environment)] }}
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Deploy to AWS Lambda
       run: |
         aws lambda update-function-code \
-          --function-name "thumbnails-${{ github.event.deployment.environment }}" \
+          --function-name "thumbnails-${{ github.event.inputs.environment}}" \
           --zip-file fileb://dist/index.zip \
           --region ${{ env.AWS_REGION }}
