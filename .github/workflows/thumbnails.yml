@@ -1,0 +1,50 @@
+name: Thumbnails
+
+on:
+  - deployment
+
+env:
+  AWS_REGION: us-west-1
+  NODE_VERSION: 22
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: thumbnails
+    environment: ${{ github.event.deployment.environment }} 
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: apt-get update && apt-get install -y zip
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: "thumbnails"
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets[format('AWS_{0}_ACCESS_KEY_ID', github.event.deployment.environment)] }}
+        aws-secret-access-key: ${{ secrets[format('AWS_{0}_SECRET_ACCESS_KEY', github.event.deployment.environment)] }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Deploy to AWS Lambda
+      run: |
+        aws lambda update-function-code \
+          --function-name "thumbnails-${{ github.event.deployment.environment }}" \
+          --zip-file fileb://dist/index.zip \
+          --region ${{ env.AWS_REGION }}

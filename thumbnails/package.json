@@ -1,0 +1,27 @@
+{
+  "name": "thumbnails",
+  "version": "1.0.0",
+  "main": "index.cjs",
+  "scripts": {
+    "prebuild": "rm dist/* || echo 'Kept dist/node_modules'",
+    "build": "tsc",
+    "postbuild": "mkdir -p dist && cp package.json dist/ && cd dist && npm install --omit dev --prefix . --os=linux --cpu=x64 && zip -r index.zip .",
+    "prestart-api": "npm run build",
+    "start-api": "sam local start-api -p 3333 --host 0.0.0.0 --add-host minio:${MINIO_IP:?variable must be set}"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.787.0",
+    "@napi-rs/canvas": "^0.1.69",
+    "pdfjs-dist": "^5.1.91",
+    "sharp": "^0.34.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.149",
+    "@types/node": "^22.14.1",
+    "esbuild": "^0.25.2",
+    "typescript": "^5.8.3"
+  }
+}

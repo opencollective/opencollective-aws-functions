@@ -1,0 +1,4 @@
+dist/
+node_modules/
+*.secrets
+gh_action_payload.json

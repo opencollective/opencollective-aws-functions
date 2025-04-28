@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  thumbnails
+
+Transform:
+- AWS::Serverless-2016-10-31
+
+Resources:
+  thumbnails:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/index.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 1024
+      Timeout: 100
+      Description: A Lambda function that generates thumbnails.
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+  minio:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/index.minioHandler
+      Runtime: nodejs22.x
+      Description: A http wrapper for local testing with minio
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Environment:
+        Variables:
+          AWS_KEY: user
+          AWS_SECRET: password
+          AWS_S3_BUCKET: opencollective-dvl
+          AWS_S3_REGION: us-east-1
+          AWS_S3_API_VERSION: latest
+          AWS_S3_ENDPOINT: http://minio:9000
+          AWS_S3_SSL_ENABLED: false
+          AWS_S3_FORCE_PATH_STYLE: true
+      Events:
+        Minio:
+          Type: Api
+          Properties:
+            Path: /
+            Method: post
+        MinioHead:
+          Type: Api
+          Properties:
+            Path: /
+            Method: head
